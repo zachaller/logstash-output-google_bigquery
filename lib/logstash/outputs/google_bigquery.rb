@@ -236,7 +236,7 @@ class LogStash::Outputs::GoogleBigQuery < LogStash::Outputs::Base
       table = get_table_name
       @logger.info("Publishing #{messages.length} messages to #{table}")
 
-      create_table_if_not_exists table
+      #create_table_if_not_exists table
 
       failed_rows = @bq_client.append(@dataset, table, messages, @ignore_unknown_values, @skip_invalid_rows)
       write_to_errors_file(failed_rows, table) unless failed_rows.empty?
