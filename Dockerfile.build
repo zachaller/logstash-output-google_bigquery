@@ -1,0 +1,73 @@
+FROM docker.elastic.co/logstash/logstash-oss:7.15.2
+
+USER root
+
+# Install rvm and ruby 2.7.2 directly from downloaded binary, which doesn't require rebuild
+#RUN gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB \
+# && curl -sSL https://get.rvm.io -o /tmp/rvm.sh \
+# && cat /tmp/rvm.sh | bash -s stable --ruby=2.7.2
+
+RUN curl -sSL https://rvm.io/mpapis.asc | gpg2 --import -
+RUN curl -sSL https://rvm.io/pkuczynski.asc | gpg2 --import -
+RUN curl -sSL https://get.rvm.io -o /tmp/rvm.sh \
+ && cat /tmp/rvm.sh | bash -s stable --ruby=2.7.2
+
+# Necessary for path to ruby 2.7.2
+SHELL ["/bin/bash", "-c"]
+
+RUN echo $(readlink -f /etc/alternatives/jre_openjdk)
+
+# rvm install jruby will install openjdk
+RUN source /usr/local/rvm/scripts/rvm \
+ && rvm install jruby \
+ && export JAVA_HOME=$(readlink -f /etc/alternatives/jre_openjdk) \
+ && gem install bundler \
+ && rm /tmp/rvm.sh
+
+RUN yum -y update \
+ && yum install -y git \
+ && yum clean all \
+ && git clone https://github.com/elastic/logstash-devutils \
+ && export JAVA_HOME=$(readlink -f /etc/alternatives/jre_openjdk) \
+ && source /usr/local/rvm/scripts/rvm \
+ && rvm use jruby \
+ && pushd logstash-devutils \
+ && export LOGSTASH_PATH=/usr/share/logstash \
+ && bundle install \
+ && popd
+
+COPY . logstash-output-google_bigquery
+
+RUN bin/logstash-plugin install logstash-filter-json_encode
+
+RUN echo 'gem "logstash-output-google_bigquery", :path => "/usr/share/logstash/logstash-output-google_bigquery"' >> Gemfile
+
+RUN pushd logstash-output-google_bigquery \
+  && source /usr/local/rvm/scripts/rvm \
+  && export JAVA_HOME=$(readlink -f /etc/alternatives/jre_openjdk) \
+  && export LOGSTASH_PATH=/usr/share/logstash \
+  && gem install ruby-maven -v '~> 3.3.11' \
+#  && gem install bundler:2.2.14 \
+#  && bundle update --bundler \
+  && rvm use jruby \
+  && bundle install \
+  && bundle exec rake vendor \
+  && gem build logstash-output-google_bigquery.gemspec \
+#  && logstash-plugin install logstash-output-google_bigquery-4.1.7-java.gem \
+  && popd \
+  && logstash-plugin install --no-verify
+#  && bundle update logstash-output-google_bigquery
+
+ENV LOGSTASH_PATH=/usr/share/logstash
+#ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.312.b07-1.el7_9.aarch64/jre
+#ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.312.b07-1.el7_9.x86_64/jre
+
+
+#export JAVA_HOME=$(readlink -f /etc/alternatives/jre_openjdk)
+#export LOGSTASH_PATH=/usr/share/logstash
+#source /usr/local/rvm/scripts/rvm
+#rvm use jruby
+#cd /tmp/src
+#bundle install
+#bundle exec rspec --seed=11325
+#gem build *.gemspec

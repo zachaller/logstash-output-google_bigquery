@@ -21,8 +21,8 @@ Gem::Specification.new do |s|
   # Gem dependencies
   s.add_runtime_dependency 'logstash-codec-plain'
   s.add_runtime_dependency 'mime-types', '~> 2' # last version compatible with ruby 2.x
-  s.add_runtime_dependency "logstash-core-plugin-api", ">= 1.60", "<= 2.99"
-  s.add_runtime_dependency "google-cloud-bigquery"
+  s.add_runtime_dependency "logstash-core-plugin-api", ">= 1.60", "<= 3.99"
+  #s.add_runtime_dependency "google-cloud-bigquery"
 
   s.add_development_dependency 'logstash-devutils'
   s.add_development_dependency 'jar-dependencies', '~> 0.3.4'
