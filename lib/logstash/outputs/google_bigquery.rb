@@ -165,6 +165,9 @@ class LogStash::Outputs::GoogleBigQuery < LogStash::Outputs::Base
   # which causes the entire request to fail if any invalid rows exist.
   config :skip_invalid_rows, validate: :boolean, default: false
 
+  # Allow setting of cluster fields on the table
+  config :cluster_fields, validate: :string, required: false, default: nil
+
   # The following configuration options still exist to alert users that are using them
   config :uploader_interval_secs, validate: :number, deprecated: 'No longer used.'
   config :deleter_interval_secs, validate: :number, deprecated: 'No longer used.'
@@ -236,7 +239,7 @@ class LogStash::Outputs::GoogleBigQuery < LogStash::Outputs::Base
       table = get_table_name
       @logger.info("Publishing #{messages.length} messages to #{table}")
 
-      #create_table_if_not_exists table
+      create_table_if_not_exists(table, @cluster_fields)
 
       failed_rows = @bq_client.append(@dataset, table, messages, @ignore_unknown_values, @skip_invalid_rows)
       write_to_errors_file(failed_rows, table) unless failed_rows.empty?
@@ -247,10 +250,10 @@ class LogStash::Outputs::GoogleBigQuery < LogStash::Outputs::Base
     end
   end
 
-  def create_table_if_not_exists table
+  def create_table_if_not_exists(table, cluster_fields)
     begin
       return nil if @bq_client.table_exists? @dataset, table
-      @bq_client.create_table(@dataset, table, @schema)
+      @bq_client.create_table(@dataset, table, @schema, cluster_fields)
 
     rescue StandardError => e
       @logger.error 'Error creating table.', :exception => e

@@ -26,11 +26,14 @@ module LogStash
         end
 
         # Creates a table with the given name in the given dataset
-        def create_table(dataset, table, schema)
+        def create_table(dataset, table, schema, cluster_fields)
           api_debug('Creating table', dataset, table)
           table_id = com.google.cloud.bigquery.TableId.of dataset, table
 
-          table_defn = com.google.cloud.bigquery.StandardTableDefinition.of schema
+          #clustering = com.google.cloud.bigquery.Clustering.newBuilder().setFields(java.util.Arrays.asList("containerName")).build()
+          clustering = com.google.cloud.bigquery.Clustering.newBuilder().setFields(java.util.Arrays.asList(cluster_fields.split(',').to_java)).build()
+          partition = com.google.cloud.bigquery.TimePartitioning.newBuilder(com.google.cloud.bigquery.TimePartitioning::Type::HOUR).build()
+          table_defn = com.google.cloud.bigquery.StandardTableDefinition.newBuilder().setSchema(schema).setTimePartitioning(partition).setClustering(clustering).build()
           table_info = com.google.cloud.bigquery.TableInfo.newBuilder(table_id, table_defn).build()
 
           @bigquery.create table_info
