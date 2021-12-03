@@ -47,28 +47,12 @@ RUN pushd logstash-output-google_bigquery \
   && export JAVA_HOME=$(readlink -f /etc/alternatives/jre_openjdk) \
   && export LOGSTASH_PATH=/usr/share/logstash \
   && gem install ruby-maven -v '~> 3.3.11' \
-#  && gem install bundler:2.2.14 \
-#  && bundle update --bundler \
   && rvm use jruby \
   && bundle install \
   && bundle exec rake vendor \
   && gem build logstash-output-google_bigquery.gemspec \
   && bundle exec rspec \
-#  && logstash-plugin install logstash-output-google_bigquery-4.1.7-java.gem \
   && popd \
   && logstash-plugin install --no-verify
-#  && bundle update logstash-output-google_bigquery
 
 ENV LOGSTASH_PATH=/usr/share/logstash
-#ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.312.b07-1.el7_9.aarch64/jre
-#ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.312.b07-1.el7_9.x86_64/jre
-
-
-#export JAVA_HOME=$(readlink -f /etc/alternatives/jre_openjdk)
-#export LOGSTASH_PATH=/usr/share/logstash
-#source /usr/local/rvm/scripts/rvm
-#rvm use jruby
-#cd /tmp/src
-#bundle install
-#bundle exec rspec --seed=11325
-#gem build *.gemspec
