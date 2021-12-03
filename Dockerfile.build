@@ -53,6 +53,7 @@ RUN pushd logstash-output-google_bigquery \
   && bundle install \
   && bundle exec rake vendor \
   && gem build logstash-output-google_bigquery.gemspec \
+  && bundle exec rspec \
 #  && logstash-plugin install logstash-output-google_bigquery-4.1.7-java.gem \
   && popd \
   && logstash-plugin install --no-verify

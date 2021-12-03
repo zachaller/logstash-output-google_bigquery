@@ -168,6 +168,9 @@ class LogStash::Outputs::GoogleBigQuery < LogStash::Outputs::Base
   # Allow setting of cluster fields on the table
   config :cluster_fields, validate: :string, required: false, default: nil
 
+  # Allow setting of cluster fields on the table
+  config :insert_partition_by, validate: :string, required: false, default: nil
+
   # The following configuration options still exist to alert users that are using them
   config :uploader_interval_secs, validate: :number, deprecated: 'No longer used.'
   config :deleter_interval_secs, validate: :number, deprecated: 'No longer used.'
@@ -239,7 +242,7 @@ class LogStash::Outputs::GoogleBigQuery < LogStash::Outputs::Base
       table = get_table_name
       @logger.info("Publishing #{messages.length} messages to #{table}")
 
-      create_table_if_not_exists(table, @cluster_fields)
+      create_table_if_not_exists(table, @cluster_fields, @insert_partition_by)
 
       failed_rows = @bq_client.append(@dataset, table, messages, @ignore_unknown_values, @skip_invalid_rows)
       write_to_errors_file(failed_rows, table) unless failed_rows.empty?
@@ -250,10 +253,10 @@ class LogStash::Outputs::GoogleBigQuery < LogStash::Outputs::Base
     end
   end
 
-  def create_table_if_not_exists(table, cluster_fields)
+  def create_table_if_not_exists(table, cluster_fields, insert_partition_by)
     begin
       return nil if @bq_client.table_exists? @dataset, table
-      @bq_client.create_table(@dataset, table, @schema, cluster_fields)
+      @bq_client.create_table(@dataset, table, @schema, cluster_fields, insert_partition_by)
 
     rescue StandardError => e
       @logger.error 'Error creating table.', :exception => e

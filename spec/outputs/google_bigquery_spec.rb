@@ -105,7 +105,7 @@ describe LogStash::Outputs::GoogleBigQuery do
       allow(bq_client).to receive(:table_exists?).and_return(true)
       expect(bq_client).to receive(:table_exists?)
 
-      subject.create_table_if_not_exists 'foo'
+      subject.create_table_if_not_exists('foo', nil, nil)
     end
 
     it 'creates a table if it does not exist' do
@@ -114,7 +114,7 @@ describe LogStash::Outputs::GoogleBigQuery do
       expect(bq_client).to receive(:table_exists?)
       expect(bq_client).to receive(:create_table)
 
-      subject.create_table_if_not_exists 'foo'
+      subject.create_table_if_not_exists('foo', nil, nil)
     end
   end
 

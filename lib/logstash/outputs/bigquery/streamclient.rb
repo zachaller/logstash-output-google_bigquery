@@ -26,16 +26,27 @@ module LogStash
         end
 
         # Creates a table with the given name in the given dataset
-        def create_table(dataset, table, schema, cluster_fields)
+        def create_table(dataset, table, schema, cluster_fields, insert_partition_by)
           api_debug('Creating table', dataset, table)
           table_id = com.google.cloud.bigquery.TableId.of dataset, table
 
-          #clustering = com.google.cloud.bigquery.Clustering.newBuilder().setFields(java.util.Arrays.asList("containerName")).build()
-          clustering = com.google.cloud.bigquery.Clustering.newBuilder().setFields(java.util.Arrays.asList(cluster_fields.split(',').to_java)).build()
-          partition = com.google.cloud.bigquery.TimePartitioning.newBuilder(com.google.cloud.bigquery.TimePartitioning::Type::HOUR).build()
-          table_defn = com.google.cloud.bigquery.StandardTableDefinition.newBuilder().setSchema(schema).setTimePartitioning(partition).setClustering(clustering).build()
-          table_info = com.google.cloud.bigquery.TableInfo.newBuilder(table_id, table_defn).build()
+          if insert_partition_by
+            partition = com.google.cloud.bigquery.TimePartitioning.newBuilder(com.google.cloud.bigquery.TimePartitioning::Type.valueOf(insert_partition_by)).build()
+          elsif cluster_fields
+            clustering = com.google.cloud.bigquery.Clustering.newBuilder().setFields(java.util.Arrays.asList(cluster_fields.split(',').to_java)).build()
+          end
+          
+          if insert_partition_by && cluster_fields
+            table_defn = com.google.cloud.bigquery.StandardTableDefinition.newBuilder().setSchema(schema).setTimePartitioning(partition).setClustering(clustering).build()
+          elsif insert_partition_by
+            table_defn = com.google.cloud.bigquery.StandardTableDefinition.newBuilder().setSchema(schema).setTimePartitioning(partition).build()
+          elsif cluster_fields
+            table_defn = com.google.cloud.bigquery.StandardTableDefinition.newBuilder().setSchema(schema).setClustering(clustering).build()
+          else
+            table_defn = com.google.cloud.bigquery.StandardTableDefinition.newBuilder().setSchema(schema).build()
+          end
 
+          table_info = com.google.cloud.bigquery.TableInfo.newBuilder(table_id, table_defn).build()
           @bigquery.create table_info
         end
 
