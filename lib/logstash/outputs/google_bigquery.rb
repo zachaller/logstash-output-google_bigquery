@@ -165,10 +165,12 @@ class LogStash::Outputs::GoogleBigQuery < LogStash::Outputs::Base
   # which causes the entire request to fail if any invalid rows exist.
   config :skip_invalid_rows, validate: :boolean, default: false
 
-  # Allow setting of cluster fields on the table
+  # Allow setting of cluster fields on the table as a commes seperated string
+  # the max google supports is for example: column1,column2
   config :cluster_fields, validate: :string, required: false, default: nil
 
-  # Allow setting of cluster fields on the table
+  # Allows settings the big query insert table partition time period it supports
+  # the default google values of DAY, HOUR, MONTH, or YEAR
   config :insert_partition_by, validate: :string, required: false, default: nil
 
   # The following configuration options still exist to alert users that are using them
