@@ -32,7 +32,8 @@ module LogStash
 
           if insert_partition_by
             partition = com.google.cloud.bigquery.TimePartitioning.newBuilder(com.google.cloud.bigquery.TimePartitioning::Type.valueOf(insert_partition_by)).build()
-          elsif cluster_fields
+          end
+          if cluster_fields
             clustering = com.google.cloud.bigquery.Clustering.newBuilder().setFields(java.util.Arrays.asList(cluster_fields.split(',').to_java)).build()
           end
           
